@@ -64,7 +64,11 @@ upload_part_rest() {
 }
 
 upload_part_rest_without_part_number() {
+<<<<<<< HEAD
   if ! check_param_count_v2 "bucket, key" 2 $#; then
+=======
+  if ! check_param_count "bucket, key" 2 $#; then
+>>>>>>> dd71e62 (test: list-buckets tests)
     return 1
   fi
   if ! create_multipart_upload_rest "$1" "$2"; then
@@ -84,7 +88,11 @@ upload_part_rest_without_part_number() {
 }
 
 upload_part_rest_without_upload_id() {
+<<<<<<< HEAD
   if ! check_param_count_v2 "bucket, key" 2 $#; then
+=======
+  if ! check_param_count "bucket, key" 2 $#; then
+>>>>>>> dd71e62 (test: list-buckets tests)
     return 1
   fi
   if ! create_multipart_upload_rest "$1" "$2"; then
