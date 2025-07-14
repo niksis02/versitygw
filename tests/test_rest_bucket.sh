@@ -69,7 +69,7 @@ export RUN_USERS=true
   run setup_bucket "$BUCKET_ONE_NAME"
   assert_success
 
-  run list_check_buckets_rest
+  run list_check_buckets_rest "$BUCKET_ONE_NAME"
   assert_success
 }
 
