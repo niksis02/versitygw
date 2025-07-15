@@ -35,7 +35,7 @@ type S3ApiController struct {
 	iam      auth.IAMService
 	logger   s3log.AuditLogger
 	evSender s3event.S3EventSender
-	mm       *metrics.Manager
+	mm       metrics.Manager
 	debug    bool
 	readonly bool
 }
@@ -51,7 +51,7 @@ var (
 	xmlhdr = []byte(`<?xml version="1.0" encoding="UTF-8"?>` + "\n")
 )
 
-func New(be backend.Backend, iam auth.IAMService, logger s3log.AuditLogger, evs s3event.S3EventSender, mm *metrics.Manager, debug bool, readonly bool) S3ApiController {
+func New(be backend.Backend, iam auth.IAMService, logger s3log.AuditLogger, evs s3event.S3EventSender, mm metrics.Manager, debug bool, readonly bool) S3ApiController {
 	if debug {
 		debuglogger.SetDebugEnabled()
 	}
@@ -70,13 +70,6 @@ func New(be backend.Backend, iam auth.IAMService, logger s3log.AuditLogger, evs 
 // Returns MethodNotAllowed for unmatched routes
 func (c S3ApiController) HandleUnmatch(ctx *fiber.Ctx) (*Response, error) {
 	return &Response{}, s3err.GetAPIError(s3err.ErrMethodNotAllowed)
-}
-
-func getint64(i *int64) int64 {
-	if i == nil {
-		return 0
-	}
-	return *i
 }
 
 // MetaOptions holds the metadata for metrics, audit logs and s3 events
@@ -105,7 +98,7 @@ type Response struct {
 type Services struct {
 	Logger         s3log.AuditLogger
 	EventSender    s3event.S3EventSender
-	MetricsManager *metrics.Manager
+	MetricsManager metrics.Manager
 }
 
 // Controller is the type definition for an s3api controller
@@ -137,7 +130,7 @@ func ProcessHandlers(controller Controller, s3action string, svc *Services, hand
 
 // WrapMiddleware executes the given middleware and handles sending the audit logs
 // and metrics. It also handles the error parsing
-func WrapMiddleware(handler fiber.Handler, logger s3log.AuditLogger, mm *metrics.Manager) fiber.Handler {
+func WrapMiddleware(handler fiber.Handler, logger s3log.AuditLogger, mm metrics.Manager) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		err := handler(ctx)
 		if err != nil {
@@ -230,11 +223,12 @@ func ProcessController(ctx *fiber.Ctx, controller Controller, s3action string, s
 		responseBytes = encodedResp
 	} else {
 		if responseBytes, err = xml.Marshal(response.Data); err != nil {
-			return err
+			debuglogger.Logf("Internal Error, %v", err)
+			return ctx.Status(http.StatusInternalServerError).Send(s3err.GetAPIErrorResponse(
+				s3err.GetAPIError(s3err.ErrInternalError), "", "", ""))
 		}
 
 		if len(responseBytes) > 0 {
-			ctx.Response().Header.Set("Content-Length", fmt.Sprint(len(responseBytes)))
 			ctx.Response().Header.SetContentType(fiber.MIMEApplicationXML)
 		}
 	}
@@ -277,6 +271,9 @@ func ProcessController(ctx *fiber.Ctx, controller Controller, s3action string, s
 	res := make([]byte, 0, msglen)
 	res = append(res, xmlhdr...)
 	res = append(res, responseBytes...)
+
+	// Set the Content-Length header
+	ctx.Response().Header.SetContentLength(msglen)
 
 	return ctx.Send(res)
 }
