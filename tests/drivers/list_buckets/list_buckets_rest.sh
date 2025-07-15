@@ -27,10 +27,10 @@ bucket_exists_in_list() {
 }
 
 list_check_buckets_rest() {
-  if ! check_param_count_gt "buckets" 1 $#; then
+  if ! check_param_count_gt "expected buckets" 1 $#; then
     return 1
   fi
-  if ! list_buckets "rest"; then
+  if ! list_buckets_rest "" "parse_bucket_list"; then
     log 2 "error listing buckets"
     return 1
   fi
@@ -44,22 +44,41 @@ list_check_buckets_rest() {
   return 0
 }
 
-list_check_buckets_rest_with_prefix() {
-  log 6 "list_check_buckets_rest_with_prefix"
-  if ! check_param_count_v2 "prefix, matching, non-matching" 3 $#; then
+parse_bucket_list() {
+  if ! check_param_count_v2 "data file" 1 $#; then
     return 1
   fi
-  if ! list_buckets_rest_prefix "$1"; then
+  # shellcheck disable=SC2154
+  log 5 "bucket list: $(cat "$1")"
+  bucket_list=$(xmllint --xpath '//*[local-name()="Bucket"]/*[local-name()="Name"]/text()' "$1")
+  bucket_array=()
+  while read -r bucket; do
+    bucket_array+=("$bucket")
+  done <<< "$bucket_list"
+  log 5 "bucket array: ${bucket_array[*]}"
+}
+
+list_check_buckets_rest_with_prefix() {
+  log 6 "list_check_buckets_rest_with_prefix"
+  if ! check_param_count_v2 "prefix" 1 $#; then
+    return 1
+  fi
+  if ! list_buckets_rest "PREFIX=$1" "parse_bucket_list"; then
     log 2 "error listing buckets with prefix"
     return 1
   fi
   log 5 "buckets: ${bucket_array[*]}"
-  if ! bucket_exists_in_list "$2"; then
-    log 2 "bucket '$2' not found"
-    return 1
-  fi
-  if bucket_exists_in_list "$3"; then
-    log 2 "bucket '$3' shouldn't have been returned"
+  local buckets_found=false
+  for bucket in "$@"; do
+    log 5 "bucket: $bucket"
+    if [[ "$bucket" != "$1"* ]]; then
+      log 2 "bucket doesn't match prefix"
+      return 1
+    fi
+    buckets_found="true"
+  done
+  if [ "$buckets_found" == "false" ]; then
+    log 2 "no buckets with prefix '$1' found"
     return 1
   fi
   return 0

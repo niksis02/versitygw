@@ -290,9 +290,9 @@ export RUN_USERS=true
   run list_check_buckets_rest "$BUCKET_ONE_NAME" "$BUCKET_TWO_NAME"
   assert_success
 
-  run list_check_buckets_rest_with_prefix "$BUCKET_ONE_NAME" "$BUCKET_ONE_NAME" "$BUCKET_TWO_NAME"
+  run list_check_buckets_rest_with_prefix "$BUCKET_ONE_NAME"
   assert_success
 
-  run list_check_buckets_rest_with_prefix "$BUCKET_TWO_NAME" "$BUCKET_TWO_NAME" "$BUCKET_ONE_NAME"
+  run list_check_buckets_rest_with_prefix "$BUCKET_TWO_NAME"
   assert_success
 }
