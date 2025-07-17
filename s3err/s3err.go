@@ -167,6 +167,7 @@ const (
 	ErrChecksumTypeWithAlgo
 	ErrInvalidChecksumHeader
 	ErrTrailerHeaderNotSupported
+	ErrMissingUploadId
 
 	// Non-AWS errors
 	ErrExistingObjectIsDirectory
@@ -724,6 +725,11 @@ var errorCodeResponse = map[ErrorCode]APIError{
 	ErrTrailerHeaderNotSupported: {
 		Code:           "InvalidRequest",
 		Description:    "The value specified in the x-amz-trailer header is not supported",
+		HTTPStatusCode: http.StatusBadRequest,
+	},
+	ErrMissingUploadId: {
+		Code:           "InvalidArgument",
+		Description:    "This operation does not accept partNumber without uploadId",
 		HTTPStatusCode: http.StatusBadRequest,
 	},
 

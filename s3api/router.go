@@ -21,6 +21,7 @@ import (
 	"github.com/versity/versitygw/metrics"
 	"github.com/versity/versitygw/s3api/controllers"
 	"github.com/versity/versitygw/s3api/middlewares"
+	"github.com/versity/versitygw/s3err"
 	"github.com/versity/versitygw/s3event"
 	"github.com/versity/versitygw/s3log"
 )
@@ -678,6 +679,18 @@ func (sa *S3ApiRouter) Init(app *fiber.App, be backend.Backend, iam auth.IAMServ
 			middlewares.VerifyMD5Body(),
 			middlewares.ParseAcl(be),
 		))
+
+	// return error if partNumber is used without uploadId
+	objectRouter.Put("",
+		middlewares.MatchQueryArgs("partNumber"),
+		controllers.ProcessHandlers(ctrl.HandleErrorRoute(s3err.GetAPIError(s3err.ErrMissingUploadId)), metrics.ActionUndetected, services))
+
+	// return 'MethodNotAllowed' if uploadId is provided without partNumber
+	// before the router reaches to 'PutObject'
+	objectRouter.Put("",
+		middlewares.MatchQueryArgs("uploadId"),
+		controllers.ProcessHandlers(ctrl.HandleErrorRoute(s3err.GetAPIError(s3err.ErrMethodNotAllowed)), metrics.ActionUndetected, services))
+
 	objectRouter.Put("",
 		middlewares.MatchHeader("X-Amz-Copy-Source"),
 		controllers.ProcessHandlers(
@@ -703,5 +716,5 @@ func (sa *S3ApiRouter) Init(app *fiber.App, be backend.Backend, iam auth.IAMServ
 		))
 
 	// Return MethodNotAllowed for all the unmatched routes
-	app.All("*", controllers.ProcessHandlers(ctrl.HandleUnmatch, metrics.ActionUndetected, services))
+	app.All("*", controllers.ProcessHandlers(ctrl.HandleErrorRoute(s3err.GetAPIError(s3err.ErrMethodNotAllowed)), metrics.ActionUndetected, services))
 }
