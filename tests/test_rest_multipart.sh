@@ -373,6 +373,9 @@ test_file="test_file"
 }
 
 @test "REST - multipart - x-amz-mp-object-size - invalid string" {
+  if [ "$DIRECT" != "true" ]; then
+    skip "https://github.com/versity/versitygw/issues/1398"
+  fi
   run setup_bucket_and_large_file "$BUCKET_ONE_NAME" "$test_file"
   assert_success
 
