@@ -35,6 +35,8 @@ checksum_hash="$CHECKSUM_HASH"
 # shellcheck disable=SC2154
 algorithm_parameter="${ALGORITHM_PARAMETER:=false}"
 
+multipart_object_size="$MULTIPART_OBJECT_SIZE"
+
 payload="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <CompleteMultipartUpload xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">$parts</CompleteMultipartUpload>"
 payload_hash="$(echo -n "$payload" | sha256sum | awk '{print $1}')"
@@ -53,6 +55,9 @@ if [ "$checksum_type" != "" ]; then
   cr_data+=("x-amz-checksum-type:$checksum_type")
 fi
 cr_data+=("x-amz-content-sha256:$payload_hash" "x-amz-date:$current_date_time")
+if [ "$multipart_object_size" != "" ]; then
+  cr_data+=("x-amz-mp-object-size:$multipart_object_size")
+fi
 build_canonical_request "${cr_data[@]}"
 
 # shellcheck disable=SC2119
