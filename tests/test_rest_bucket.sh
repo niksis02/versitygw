@@ -296,3 +296,14 @@ export RUN_USERS=true
   run list_check_buckets_rest_with_prefix "$BUCKET_TWO_NAME"
   assert_success
 }
+
+@test "REST - list buckets - pages" {
+  run setup_buckets "$BUCKET_ONE_NAME" "$BUCKET_TWO_NAME"
+  assert_success
+
+  if ! list_buckets_rest "MAX_BUCKETS=1" "parse_bucket_list"; then
+    log 2 "error listing buckets"
+    return 1
+  fi
+  return 1
+}

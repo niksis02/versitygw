@@ -18,12 +18,17 @@ source ./tests/rest_scripts/rest.sh
 
 # shellcheck disable=SC2153
 prefix="$PREFIX"
+# shellcheck disable=SC2153
+max_buckets="$MAX_BUCKETS"
 
 current_date_time=$(date -u +"%Y%m%dT%H%M%SZ")
 
 canonical_request_data=("GET" "/")
 queries=""
-if [ "$PREFIX" != "" ]; then
+if [ "$max_buckets" != "" ]; then
+  queries=$(add_parameter "$queries" "max-buckets=$max_buckets")
+fi
+if [ "$prefix" != "" ]; then
   queries=$(add_parameter "$queries" "prefix=$prefix")
 fi
 canonical_request_data+=("$queries")
