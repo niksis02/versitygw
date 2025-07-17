@@ -42,6 +42,18 @@ complete_multipart_upload_rest() {
   return 0
 }
 
+complete_multipart_upload_rest_expect_error() {
+  if ! check_param_count_gt "bucket, key, upload ID, parts, additional params, response code, error code, message" 8 $#; then
+    return 1
+  fi
+  env_vars="BUCKET_NAME=$1 OBJECT_KEY=$2 UPLOAD_ID=$3 PARTS=$4 $5"
+  if ! send_rest_command_expect_error "$env_vars" "./tests/rest_scripts/complete_multipart_upload.sh" "$6" "$7" "$8"; then
+    log 2 "error sending REST command and checking error"
+    return 1
+  fi
+  return 0
+}
+
 complete_multipart_upload_rest_nonexistent_param() {
   if ! check_param_count_v2 "bucket, key, upload ID, parts payload" 4 $#; then
     return 1

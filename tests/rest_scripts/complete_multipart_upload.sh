@@ -34,7 +34,7 @@ checksum_algorithm="$CHECKSUM_ALGORITHM"
 checksum_hash="$CHECKSUM_HASH"
 # shellcheck disable=SC2154
 algorithm_parameter="${ALGORITHM_PARAMETER:=false}"
-
+# shellcheck disable=SC2153
 multipart_object_size="$MULTIPART_OBJECT_SIZE"
 
 payload="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
